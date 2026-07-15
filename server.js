@@ -301,7 +301,7 @@ app.post("/api/admin/unblock", (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🐟 Msuiting Booking Server running on port ${PORT}`);
   console.log(`📁 Data stored at: ${DATA_FILE}`);
 });
