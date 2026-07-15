@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐟 Book Msuiting!</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --sun:#FFE156; --coral:#FF6B6B; --mint:#51CF66; --sky:#4DABF7;
+    --lavender:#B197FC; --peach:#FFA94D; --pink:#F06595;
+    --cream:#FFF9EC; --ink:#2D3436;
+  }
+
+  body {
+    font-family: 'Nunito','PingFang SC','Microsoft YaHei',sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    display: flex; align-items:center; justify-content: center;
+    padding: 20px;
+    overflow-x: hidden;
+  }
+
+  /* ===== Keyframes ===== */
+  @keyframes popIn {
+    0% { transform:scale(0.3) rotate(-20deg); opacity:0; }
+    60% { transform:scale(1.12) rotate(4deg); }
+    80% { transform:scale(0.94) rotate(-2deg); }
+    100% { transform:scale(1) rotate(0); opacity:1; }
+  }
+  @keyframes slideUp {
+    from { transform:translateY(30px); opacity:0; }
+    to { transform:translateY(0); opacity:1; }
+  }
+  @keyframes bobble {
+    0%,100% { transform:translateY(0); }
+    50% { transform:translateY(-6px); }
+  }
+  @keyframes wiggle {
+    0%,100% { transform:rotate(-3deg); }
+    50% { transform:rotate(3deg); }
+  }
+  @keyframes pulse {
+    0%,100% { transform:scale(1); }
+    50% { transform:scale(1.06); }
+  }
+  @keyframes floatUp {
+    0% { transform:translateY(80px) scale(0); opacity:0; }
+    20% { opacity:1; }
+    80% { opacity:0.8; }
+    100% { transform:translateY(-40px) scale(1); opacity:0; }
+  }
+  @keyframes celebrate {
+    0% { transform:translateY(0) scale(1); opacity:1; }
+    100% { transform:translateY(-200px) scale(1.5); opacity:0; }
+  }
+  @keyframes fadeInUp {
+    from { transform:translateY(20px); opacity:0; }
+    to { transform:translateY(0); opacity:1; }
+  }
+
+  /* ===== Container ===== */
+  .app {
+    width:100%; max-width:480px;
+    position:relative;
+  }
+
+  /* ===== Screen System ===== */
+  .screen { display:none; }
+  .screen.active { display:block; animation:slideUp 0.5s ease-out; }
+
+  /* ===== Shared Card Style ===== */
+  .card {
+    background: white;
+    border:3px solid var(--ink);
+    border-radius:28px;
+    padding:36px 28px;
+    box-shadow:8px 8px 0px rgba(0,0,0,0.12);
+    position:relative;
+    text-align:center;
+  }
+
+  .card-title {
+    font-family:'Fredoka One',cursive;
+    font-size:1.6rem;
+    color:var(--ink);
+    margin-bottom:4px;
+  }
+
+  /* ===== Inputs ===== */
+  .input-wrap {
+    text-align:left; margin-bottom:18px;
+  }
+
+  .input-wrap label {
+    display:block;
+    font-weight:800; font-size:0.85rem;
+    color:var(--ink);
+    margin-bottom:6px;
+    text-transform:uppercase; letter-spacing:0.5px;
+  }
+
+  .doodle-input {
+    width:100%; padding:14px 16px;
+    border:2.5px solid var(--ink);
+    border-radius:14px;
+    font-size:1rem; font-family:'Nunito',sans-serif;
+    color:var(--ink); background:white;
+    outline:none; transition:all 0.2s;
+  }
+
+  .doodle-input:focus {
+    border-color:var(--sky);
+    box-shadow:0 0 0 4px rgba(77,171,247,0.15);
+    transform:translateY(-1px);
+  }
+
+  .doodle-input::placeholder {
+    color:rgba(0,0,0,0.25);
+  }
+
+  /* ===== Buttons ===== */
+  .doodle-btn {
+    display:block; width:100%; padding:16px 24px;
+    border:3px solid var(--ink); border-radius:18px;
+    font-family:'Nunito',sans-serif; font-size:1.1rem; font-weight:800;
+    cursor:pointer; color:var(--ink);
+    box-shadow:5px 5px 0px rgba(0,0,0,0.12);
+    transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    position:relative; letter-spacing:0.3px;
+  }
+
+  .doodle-btn:hover {
+    transform:translate(-2px,-3px);
+    box-shadow:7px 8px 0px rgba(0,0,0,0.15);
+  }
+  .doodle-btn:active {
+    transform:translate(2px,2px);
+    box-shadow:2px 2px 0px rgba(0,0,0,0.12);
+  }
+  .doodle-btn:disabled {
+    opacity:0.4; cursor:not-allowed;
+    transform:none; box-shadow:3px 3px 0px rgba(0,0,0,0.08);
+  }
+
+  .btn-sun { background:var(--sun); }
+  .btn-coral { background:var(--coral); color:white; }
+  .btn-mint { background:var(--mint); color:white; }
+  .btn-lavender { background:var(--lavender); color:white; }
+
+  /* ===== Welcome Screen ===== */
+  .welcome-fish {
+    font-size:72px; display:block;
+    animation:bobble 1.5s ease-in-out infinite;
+  }
+
+  .fish-count {
+    font-family:'Fredoka One',cursive;
+    font-size:5rem; color:var(--coral);
+    line-height:1; margin:8px 0;
+    animation:pulse 2s ease-in-out infinite;
+    display:inline-block;
+  }
+
+  .fish-label {
+    display:inline-block; background:var(--sun);
+    padding:4px 14px; border-radius:12px;
+    font-weight:800; font-size:0.8rem;
+    border:2px solid var(--ink);
+    transform:rotate(-2deg);
+  }
+
+  .back-link {
+    display:inline-block; margin-top:14px;
+    color:rgba(0,0,0,0.4); font-weight:700; font-size:0.85rem;
+    cursor:pointer; text-decoration:underline;
+  }
+  .back-link:hover { color:var(--ink); }
+
+  /* ===== Fish Picker ===== */
+  .fish-picker-wrap {
+    margin-bottom:18px; text-align:left;
+  }
+
+  .fish-picker-wrap label {
+    display:block;
+    font-weight:800; font-size:0.85rem;
+    color:var(--ink);
+    margin-bottom:10px;
+    text-transform:uppercase; letter-spacing:0.5px;
+  }
+
+  .fish-picker {
+    display:flex; flex-wrap:wrap; gap:10px;
+    justify-content:center;
+  }
+
+  .fish-option {
+    width:52px; height:52px;
+    border:2.5px solid rgba(0,0,0,0.12);
+    border-radius:14px;
+    font-size:1.8rem;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    background:white;
+    transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    user-select:none;
+  }
+
+  .fish-option:hover {
+    transform:scale(1.2) translateY(-4px);
+    border-color:var(--ink);
+    box-shadow:0 6px 14px rgba(0,0,0,0.1);
+  }
+
+  .fish-option.selected {
+    border-color:var(--ink);
+    background:var(--sun);
+    transform:scale(1.15);
+    box-shadow:0 4px 12px rgba(0,0,0,0.12);
+    animation:bobble 0.6s ease-in-out infinite;
+  }
+
+  .fish-option.selected::after {
+    content:'✓';
+    position:absolute; top:-6px; right:-6px;
+    background:var(--mint); color:white;
+    font-size:0.6rem; font-weight:900;
+    width:20px; height:20px;
+    border-radius:50%; display:flex;
+    align-items:center; justify-content:center;
+    border:2px solid var(--ink);
+  }
+
+  .fish-picker-hint {
+    font-size:0.75rem; color:rgba(0,0,0,0.25);
+    margin-top:6px; text-align:center;
+    font-weight:700;
+  }
+
+  /* ===== Calendar ===== */
+  .cal-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:16px;
+  }
+
+  .cal-nav-btn {
+    width:38px; height:38px; border-radius:50%;
+    border:2.5px solid var(--ink); background:white;
+    font-size:1rem; cursor:pointer; display:flex;
+    align-items:center; justify-content:center;
+    transition:all 0.2s; font-weight:800; color:var(--ink);
+  }
+  .cal-nav-btn:hover { background:var(--sun); }
+
+  .cal-month-label {
+    font-family:'Fredoka One',cursive; font-size:1.3rem;
+    color:var(--ink);
+  }
+
+  .cal-grid {
+    display:grid; grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+
+  .cal-day-hdr {
+    text-align:center; font-size:0.7rem; font-weight:800;
+    color:rgba(0,0,0,0.3); padding:6px 0;
+    text-transform:uppercase;
+  }
+
+  .cal-cell {
+    aspect-ratio:1;
+    border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.9rem; font-weight:700;
+    border:2px solid transparent;
+    cursor:pointer; transition:all 0.15s;
+    color:var(--ink); position:relative;
+  }
+
+  .cal-cell:hover:not(.cal-disabled):not(.cal-booked) {
+    background:rgba(77,171,247,0.1);
+    border-color:var(--sky);
+    transform:scale(1.12);
+  }
+
+  .cal-cell.cal-empty {
+    cursor:default; background:transparent;
+  }
+
+  .cal-cell.cal-disabled {
+    color:rgba(0,0,0,0.15); cursor:not-allowed;
+    background:transparent;
+  }
+
+  .cal-cell.cal-today {
+    border:2.5px solid var(--sun);
+    background:rgba(255,225,86,0.15);
+  }
+
+  .cal-cell.cal-booked {
+    background:rgba(255,107,107,0.15);
+    border-color:var(--coral);
+    color:var(--coral);
+    cursor:not-allowed;
+    position:relative;
+  }
+  .cal-cell .booked-fish-emoji {
+    position:absolute;
+    font-size:0.55rem; bottom:1px; right:2px;
+    opacity:0.9;
+  }
+  .cal-cell.cal-blocked {
+    background:rgba(177,151,252,0.15);
+    border-color:var(--lavender);
+    color:var(--lavender);
+    cursor:not-allowed;
+    position:relative;
+  }
+  .cal-cell.cal-blocked::after {
+    content:'🤿';
+    position:absolute;
+    font-size:0.5rem; bottom:1px; right:2px;
+    opacity:0.8;
+  }
+
+  .cal-cell.cal-selected {
+    background:var(--sky); color:white;
+    border-color:var(--ink);
+    transform:scale(1.08);
+  }
+
+  .cal-legend {
+    display:flex; gap:14px; justify-content:center;
+    margin-top:14px; font-size:0.75rem; color:rgba(0,0,0,0.4);
+    font-weight:700;
+  }
+  .cal-legend span { display:flex; align-items:center; gap:4px; }
+
+  /* ===== Form ===== */
+  .time-row {
+    display:flex; gap:12px;
+  }
+  .time-row .input-wrap { flex:1; }
+
+  .selected-date-tag {
+    display:inline-block;
+    background:var(--sun); padding:6px 14px;
+    border-radius:10px; border:2px solid var(--ink);
+    font-weight:800; margin-bottom:16px;
+    transform:rotate(-1deg);
+  }
+
+  /* ===== Status Screens ===== */
+  .status-emoji {
+    font-size:80px; display:block;
+    animation:bobble 1.5s ease-in-out infinite;
+  }
+
+  .status-title {
+    font-family:'Fredoka One',cursive;
+    font-size:1.5rem; margin:8px 0;
+  }
+
+  .status-detail {
+    background:rgba(0,0,0,0.03);
+    border-radius:16px; padding:16px;
+    text-align:left; font-size:0.85rem;
+    line-height:1.8; margin-top:14px;
+  }
+  .status-detail strong { color:var(--ink); }
+
+  .spinner {
+    display:inline-block; width:36px; height:36px;
+    border:3.5px solid rgba(0,0,0,0.1);
+    border-top-color:var(--peach);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+    margin:14px 0;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .checking-text {
+    color:rgba(0,0,0,0.35); font-weight:700; font-size:0.8rem;
+  }
+
+  /* Confetti layer */
+  .confetti-layer {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    pointer-events:none; z-index:10;
+  }
+
+  @media (max-width:480px) {
+    .card { padding:24px 16px; border-radius:22px; }
+    .fish-count { font-size:3.5rem; }
+    .time-row { flex-direction:column; gap:0; }
+    .doodle-btn { padding:14px 20px; font-size:1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Confetti layer -->
+<div class="confetti-layer" id="confetti"></div>
+
+<div class="app">
+
+  <!-- SCREEN 1: Welcome -->
+  <div class="screen active" id="scrWelcome">
+    <div class="card" style="animation:popIn 0.6s ease-out;">
+      <span class="welcome-fish">🎉</span>
+      <h2 class="card-title">CONGRATS!</h2>
+      <p style="font-weight:700; color:rgba(0,0,0,0.4); margin-bottom:4px;">You are</p>
+      <div class="fish-count" id="fishNum">...</div>
+      <p style="font-size:0.9rem; font-weight:700; color:rgba(0,0,0,0.35); margin-bottom:20px;">
+        Fish Number <span id="fishOrdinal" style="color:var(--coral);">...</span> in the pond! 🐟
+      </p>
+
+      <div class="input-wrap">
+        <label>🐚 your name</label>
+        <input type="text" class="doodle-input" id="nameInput"
+          placeholder="what should i call you?" maxlength="50" autocomplete="off">
+      </div>
+
+      <div class="fish-picker-wrap">
+        <label>🐠 which one is you?</label>
+        <div class="fish-picker" id="fishPicker"></div>
+        <p class="fish-picker-hint">pick your fish identity!</p>
+      </div>
+
+      <button class="doodle-btn btn-sun" id="btnDive" disabled>
+        🐟 dive in & pick a date!
+      </button>
+
+      <div class="back-link" onclick="window.location.href='/'">← back to pond</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Calendar -->
+  <div class="screen" id="scrCalendar">
+    <div class="card">
+      <h2 class="card-title" style="margin-bottom:16px;">📅 pick a date!</h2>
+      <p style="font-weight:700; color:rgba(0,0,0,0.35); margin-bottom:8px; font-size:0.85rem;">
+        hey <span id="calNameDisplay" style="color:var(--coral);">fish</span>, when works for u?
+      </p>
+
+      <div class="cal-header">
+        <button class="cal-nav-btn" id="calPrev">◀</button>
+        <span class="cal-month-label" id="calMonthYear"></span>
+        <button class="cal-nav-btn" id="calNext">▶</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <span>🐟 booked</span>
+        <span>🤿 wu busy</span>
+        <span>🌞 today</span>
+      </div>
+      <div class="back-link" onclick="goScreen('scrWelcome')">← go back</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Booking Form -->
+  <div class="screen" id="scrForm">
+    <div class="card">
+      <h2 class="card-title" style="margin-bottom:8px;">📋 fill it in!</h2>
+      <div class="selected-date-tag" id="formDateTag">July 20, 2026</div>
+
+      <div class="input-wrap">
+        <label>🎯 event</label>
+        <input type="text" class="doodle-input" id="eventInput"
+          placeholder="coffee? study? hangout?" maxlength="100">
+      </div>
+
+      <div class="time-row">
+        <div class="input-wrap">
+          <label>⏰ start</label>
+          <input type="time" class="doodle-input" id="startInput">
+        </div>
+        <div class="input-wrap">
+          <label>⏱️ end</label>
+          <input type="time" class="doodle-input" id="endInput">
+        </div>
+      </div>
+
+      <button class="doodle-btn btn-lavender" id="btnSend">
+        📨 send invitation!
+      </button>
+      <div class="back-link" onclick="goScreen('scrCalendar')">← pick another date</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: Pending -->
+  <div class="screen" id="scrPending">
+    <div class="card" style="animation:popIn 0.6s ease-out;">
+      <span class="status-emoji">📬</span>
+      <h2 class="status-title" style="color:var(--peach);">invitation sent!</h2>
+      <p style="font-weight:700; color:rgba(0,0,0,0.4);">waiting for msuiting's confirmation...</p>
+      <div class="spinner"></div>
+      <p class="checking-text">checking for updates every few seconds~</p>
+      <div class="status-detail" id="pendingDetail"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: Confirmed -->
+  <div class="screen" id="scrConfirmed">
+    <div class="card" style="animation:popIn 0.6s ease-out;">
+      <span class="status-emoji" style="animation:bobble 0.8s ease-in-out infinite;">🎊</span>
+      <h2 class="status-title" style="color:var(--mint);">event confirmed!</h2>
+      <p style="font-weight:700; color:rgba(0,0,0,0.4);">
+        congrats Fish Number <span id="confirmedFish" style="color:var(--coral);font-size:1.4rem;"></span>! 🐟
+      </p>
+      <div class="status-detail" id="confirmedDetail"></div>
+      <button class="doodle-btn btn-sun" onclick="window.location.href='/'" style="margin-top:14px;">
+        🏠 back to pond
+      </button>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: Rejected -->
+  <div class="screen" id="scrRejected">
+    <div class="card" style="animation:popIn 0.6s ease-out;">
+      <span class="status-emoji">😢</span>
+      <h2 class="status-title" style="color:var(--coral);">not this time...</h2>
+      <p style="font-weight:700; color:rgba(0,0,0,0.4);">
+        your invitation wasn't accepted. but hey — try a different time!
+      </p>
+      <button class="doodle-btn btn-coral" onclick="window.location.href='/book.html'" style="margin-top:14px;">
+        🐟 try again
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+// --- State ---
+let myFishNumber = null;
+let myName = '';
+let myFishEmoji = '';
+let myBookingId = null;
+let selectedDate = null;
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let bookedSlots = [];
+let blockedSlots = [];
+let pollTimer = null;
+
+// --- Device ID (persistent per browser) ---
+function getDeviceId() {
+  let id = localStorage.getItem('msuiting_device_id');
+  if (!id) {
+    id = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('msuiting_device_id', id);
+  }
+  return id;
+}
+
+// --- Saved fish emoji (persistent per browser) ---
+function getSavedFishEmoji() {
+  return localStorage.getItem('msuiting_fish_emoji') || '';
+}
+function saveFishEmoji(emoji) {
+  localStorage.setItem('msuiting_fish_emoji', emoji);
+}
+
+const FISH_EMOJIS = ['🐟','🐠','🐡','🦈','🐋','🐬','🐙','🦀','🐚','🦑'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+// --- Init ---
+(async function init() {
+  await claimFish();
+  await loadBookings();
+  buildFishPicker();
+
+  document.getElementById('nameInput').addEventListener('input', checkReady);
+  document.getElementById('btnDive').addEventListener('click', startBooking);
+  document.getElementById('btnSend').addEventListener('click', sendInvite);
+  document.getElementById('calPrev').addEventListener('click', () => changeMonth(-1));
+  document.getElementById('calNext').addEventListener('click', () => changeMonth(1));
+})();
+
+// --- Fish Picker ---
+function buildFishPicker() {
+  const picker = document.getElementById('fishPicker');
+  const savedEmoji = getSavedFishEmoji();
+  FISH_EMOJIS.forEach((emoji, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'fish-option';
+    btn.textContent = emoji;
+    btn.style.position = 'relative';
+    btn.addEventListener('click', () => selectFish(emoji, btn));
+    // Auto-select previously chosen emoji
+    if (savedEmoji === emoji) {
+      selectFish(emoji, btn);
+    }
+    picker.appendChild(btn);
+  });
+}
+
+function selectFish(emoji, el) {
+  document.querySelectorAll('.fish-option').forEach(f => f.classList.remove('selected'));
+  el.classList.add('selected');
+  myFishEmoji = emoji;
+  saveFishEmoji(emoji);
+  const hint = document.querySelector('.fish-picker-hint');
+  if (hint) hint.remove();
+  checkReady();
+}
+
+function checkReady() {
+  const name = document.getElementById('nameInput').value.trim();
+  document.getElementById('btnDive').disabled = !name || !myFishEmoji;
+}
+
+// --- API ---
+async function claimFish() {
+  try {
+    const deviceId = getDeviceId();
+    const r = await fetch('/api/claim-fish', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ deviceId })
+    });
+    const d = await r.json();
+    myFishNumber = d.fishNumber;
+    document.getElementById('fishNum').textContent = d.fishNumber;
+    document.getElementById('fishOrdinal').textContent = ordinal(d.fishNumber);
+
+    // If returning user with saved name, pre-fill it
+    if (d.returning && d.name) {
+      document.getElementById('nameInput').value = d.name;
+      myName = d.name;
+      // Show "welcome back" badge
+      const welcomeEl = document.createElement('div');
+      welcomeEl.style.cssText = 'background:var(--mint);color:white;padding:6px 14px;border-radius:10px;border:2px solid var(--ink);font-weight:800;font-size:0.8rem;margin-bottom:12px;display:inline-block;animation:popIn 0.5s ease-out;';
+      welcomeEl.textContent = '🐟 welcome back, Fish #' + d.fishNumber + '!';
+      document.querySelector('.card').insertBefore(welcomeEl, document.querySelector('.input-wrap'));
+      checkReady();
+    }
+  } catch(e) {
+    document.getElementById('fishNum').textContent = '?';
+  }
+}
+
+async function loadBookings() {
+  try {
+    const r = await fetch('/api/bookings');
+    const all = await r.json();
+    bookedSlots = all.filter(s => s.type === 'booking');
+    blockedSlots = all.filter(s => s.type === 'blocked');
+  } catch { bookedSlots = []; blockedSlots = []; }
+}
+
+function ordinal(n) {
+  const s = ['th','st','nd','rd'];
+  const v = n % 100;
+  return n + (s[(v-20)%10] || s[v] || s[0]);
+}
+
+// --- Nav ---
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// --- Start ---
+async function startBooking() {
+  myName = document.getElementById('nameInput').value.trim();
+  if (!myName || !myFishEmoji) return;
+
+  // Save name to device mapping so it persists on return
+  try {
+    await fetch('/api/claim-fish', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ deviceId: getDeviceId(), name: myName })
+    });
+  } catch {}
+
+  document.getElementById('calNameDisplay').textContent = myFishEmoji + ' ' + myName;
+  goScreen('scrCalendar');
+  renderCalendar();
+}
+
+// --- Calendar ---
+function changeMonth(d) {
+  currentMonth += d;
+  if (currentMonth<0) { currentMonth=11; currentYear--; }
+  if (currentMonth>11) { currentMonth=0; currentYear++; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  document.getElementById('calMonthYear').textContent = MONTHS[currentMonth]+' '+currentYear;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  DAYS.forEach(d => {
+    const h = document.createElement('div'); h.className='cal-day-hdr';
+    h.textContent = d; grid.appendChild(h);
+  });
+
+  const firstDay = new Date(currentYear,currentMonth,1).getDay();
+  const days = new Date(currentYear,currentMonth+1,0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  for (let i=0;i<firstDay;i++) {
+    const e = document.createElement('div'); e.className='cal-cell cal-empty'; grid.appendChild(e);
+  }
+
+  for (let day=1; day<=days; day++) {
+    const cell = document.createElement('div'); cell.className='cal-cell'; cell.textContent=day;
+
+    const date = new Date(currentYear,currentMonth,day); date.setHours(0,0,0,0);
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+
+    const isToday = date.getTime() === today.getTime();
+    const isPast = date < today;
+    const isBooked = bookedSlots.some(b => b.date === dateStr);
+    const isBlocked = blockedSlots.some(b => b.date === dateStr);
+
+    if (isToday) cell.classList.add('cal-today');
+    if (isPast) cell.classList.add('cal-disabled');
+    if (isBooked) {
+      cell.classList.add('cal-booked');
+      const bs = bookedSlots.filter(b=>b.date===dateStr);
+      cell.title = 'Booked by Fish #'+bs.map(b=>b.fishNumber).join(', ');
+      const emojiEl = document.createElement('span');
+      emojiEl.className = 'booked-fish-emoji';
+      emojiEl.textContent = bs[0].fishEmoji || '🐟';
+      cell.appendChild(emojiEl);
+    }
+    if (isBlocked) {
+      cell.classList.add('cal-blocked');
+      cell.title = 'wu is busy diving 🤿';
+    }
+
+    if (!isPast && !isBooked && !isBlocked) {
+      cell.addEventListener('click', ()=>pickDate(currentYear,currentMonth,day));
+    }
+
+    grid.appendChild(cell);
+  }
+}
+
+function pickDate(y,m,d) {
+  selectedDate = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  document.getElementById('formDateTag').textContent = '📅 '+MONTHS[m]+' '+d+', '+y;
+  document.getElementById('eventInput').value = '';
+  document.getElementById('startInput').value = '';
+  document.getElementById('endInput').value = '';
+  goScreen('scrForm');
+}
+
+// --- Send ---
+async function sendInvite() {
+  const event = document.getElementById('eventInput').value.trim();
+  const start = document.getElementById('startInput').value;
+  const end = document.getElementById('endInput').value;
+  if (!event) return alert('enter an event name! 🎯');
+  if (!start) return alert('pick a start time! ⏰');
+  if (!end) return alert('pick an end time! ⏱️');
+  if (start >= end) return alert('end time must be after start! 🤔');
+
+  try {
+    const r = await fetch('/api/invite', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ fishNumber:myFishNumber, name:myName, fishEmoji:myFishEmoji, event, date:selectedDate, startTime:start, endTime:end })
+    });
+    const d = await r.json();
+    if (!r.ok) { alert(d.error); return; }
+
+    myBookingId = d.booking.id;
+    document.getElementById('pendingDetail').innerHTML = `
+      <strong>${myFishEmoji} Fish #:</strong> ${myFishNumber}<br>
+      <strong>👤 Name:</strong> ${escapeH(myName)}<br>
+      <strong>🎯 Event:</strong> ${escapeH(event)}<br>
+      <strong>📅 Date:</strong> ${selectedDate}<br>
+      <strong>⏰ Time:</strong> ${start} — ${end}
+    `;
+    goScreen('scrPending');
+    startPolling();
+  } catch(e) { alert('oops, network error! try again~'); }
+}
+
+// --- Polling ---
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(checkStatus, 5000);
+}
+
+async function checkStatus() {
+  if (!myBookingId) return;
+  try {
+    const r = await fetch('/api/booking-status/'+myBookingId);
+    const d = await r.json();
+    if (d.status==='confirmed') {
+      clearInterval(pollTimer);
+      document.getElementById('confirmedFish').textContent = d.fishNumber;
+      document.getElementById('confirmedDetail').innerHTML = document.getElementById('pendingDetail').innerHTML;
+      goScreen('scrConfirmed');
+      launchConfetti();
+    } else if (d.status==='rejected') {
+      clearInterval(pollTimer);
+      goScreen('scrRejected');
+    }
+  } catch {}
+}
+
+// --- Confetti ---
+function launchConfetti() {
+  const layer = document.getElementById('confetti');
+  const emojis = ['🎉','✨','🎊','🌟','💫','🐟','🎈','💖','🌈','⭐'];
+  for (let i=0;i<30;i++) {
+    setTimeout(()=>{
+      const el = document.createElement('div');
+      el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      el.style.cssText = `
+        position:absolute; top:${Math.random()*100}%; left:${Math.random()*100}%;
+        font-size:${Math.random()*2+1.2}rem;
+        animation: celebrate ${Math.random()*1.5+1}s ease-out forwards;
+      `;
+      layer.appendChild(el);
+      setTimeout(()=>el.remove(),3000);
+    }, i*80);
+  }
+}
+
+function escapeH(s) {
+  const d=document.createElement('div'); d.textContent=s; return d.innerHTML;
+}
+</script>
+</body>
+</html>

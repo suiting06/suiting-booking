@@ -1,0 +1,13 @@
+{
+  "name": "msuiting-booking",
+  "version": "1.0.0",
+  "description": "Booking website for msuiting",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌊 Admin — Msuiting's Pond</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --sun:#FFE156; --coral:#FF6B6B; --mint:#51CF66; --sky:#4DABF7;
+    --lavender:#B197FC; --peach:#FFA94D; --pink:#F06595;
+    --cream:#FFF9EC; --ink:#2D3436;
+  }
+
+  body {
+    font-family:'Nunito','PingFang SC','Microsoft YaHei',sans-serif;
+    background:var(--cream);
+    min-height:100vh; color:var(--ink);
+  }
+
+  @keyframes slideIn {
+    from { opacity:0; transform:translateX(-20px); }
+    to { opacity:1; transform:translateX(0); }
+  }
+  @keyframes popIn {
+    0% { transform:scale(0.3) rotate(-15deg); opacity:0; }
+    60% { transform:scale(1.1) rotate(3deg); }
+    100% { transform:scale(1) rotate(0); opacity:1; }
+  }
+  @keyframes bobble {
+    0%,100% { transform:translateY(0); }
+    50% { transform:translateY(-5px); }
+  }
+  @keyframes pulse {
+    0%,100% { transform:scale(1); }
+    50% { transform:scale(1.05); }
+  }
+
+  /* ===== Overlay for invite details ===== */
+  .detail-overlay {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.4); z-index:50;
+    display:none; align-items:center; justify-content:center;
+  }
+  .detail-overlay.show { display:flex; }
+
+  /* ===== Layout ===== */
+  .layout {
+    display:flex; min-height:100vh;
+  }
+
+  /* ===== Sidebar ===== */
+  .sidebar {
+    width:340px; min-width:340px;
+    background:white;
+    border-right:3px solid var(--ink);
+    padding:24px 20px;
+    display:flex; flex-direction:column;
+    gap:16px;
+    height:100vh; position:sticky; top:0;
+    overflow-y:auto;
+    box-shadow:4px 0 0px rgba(0,0,0,0.06);
+  }
+
+  .sidebar-title {
+    font-family:'Fredoka One',cursive;
+    font-size:1.3rem; text-align:center;
+    color:var(--ink);
+  }
+
+  .invitation-box {
+    background:rgba(0,0,0,0.02);
+    border:2.5px solid var(--ink);
+    border-radius:18px; padding:16px;
+    flex:1; overflow-y:auto;
+    box-shadow:4px 4px 0px rgba(0,0,0,0.08);
+  }
+
+  .invitation-box h3 {
+    font-family:'Fredoka One',cursive;
+    font-size:1rem; margin-bottom:12px;
+    color:var(--ink); text-align:center;
+    letter-spacing:0.5px;
+  }
+
+  .invite-card {
+    background:white;
+    border:2px solid var(--ink);
+    border-radius:14px; padding:14px;
+    margin-bottom:10px;
+    box-shadow:3px 3px 0px rgba(0,0,0,0.08);
+    animation:slideIn 0.3s ease-out;
+    transition:all 0.2s;
+  }
+  .invite-card:hover {
+    box-shadow:5px 5px 0px rgba(0,0,0,0.12);
+  }
+
+  .invite-card .fish-badge {
+    display:inline-block;
+    background:var(--sun);
+    padding:3px 10px; border-radius:8px;
+    border:2px solid var(--ink);
+    font-weight:800; font-size:0.85rem;
+    margin-bottom:6px;
+  }
+
+  .invite-card .name {
+    font-weight:900; font-size:1.1rem; color:var(--ink);
+    margin-bottom:2px;
+  }
+
+  .invite-card .meta {
+    font-size:0.78rem; color:rgba(0,0,0,0.45);
+    line-height:1.7;
+  }
+  .invite-card .meta strong {
+    color:rgba(0,0,0,0.7);
+  }
+
+  .invite-actions {
+    display:flex; gap:8px; margin-top:10px;
+  }
+
+  .btn {
+    padding:9px 16px; border:2.5px solid var(--ink);
+    border-radius:12px; font-weight:800; font-size:0.85rem;
+    font-family:'Nunito',sans-serif; cursor:pointer;
+    box-shadow:3px 3px 0px rgba(0,0,0,0.1);
+    transition:all 0.2s; flex:1; text-align:center;
+  }
+  .btn:hover {
+    transform:translate(-1px,-2px);
+    box-shadow:4px 5px 0px rgba(0,0,0,0.14);
+  }
+  .btn:active {
+    transform:translate(1px,1px);
+    box-shadow:1px 1px 0px rgba(0,0,0,0.1);
+  }
+
+  .btn-accept { background:var(--mint); color:white; }
+  .btn-reject { background:white; color:var(--coral); }
+  .btn-accept:hover { background:#3cb84d; }
+  .btn-reject:hover { background:rgba(255,107,107,0.08); }
+
+  .empty-state {
+    text-align:center; padding:50px 20px;
+    color:rgba(0,0,0,0.25);
+  }
+  .empty-state .icon {
+    font-size:48px; display:block; margin-bottom:8px;
+  }
+
+  .btn-logout {
+    width:100%; padding:12px;
+    background:white; border:2.5px solid var(--ink);
+    border-radius:14px; font-weight:800; font-size:0.9rem;
+    font-family:'Nunito',sans-serif; cursor:pointer;
+    color:rgba(0,0,0,0.4); box-shadow:3px 3px 0px rgba(0,0,0,0.08);
+    transition:all 0.2s;
+  }
+  .btn-logout:hover {
+    color:var(--ink); box-shadow:4px 4px 0px rgba(0,0,0,0.12);
+  }
+
+  /* ===== Blocked Slots List ===== */
+  .blocked-section {
+    margin-top: 4px;
+  }
+  .blocked-section h3 {
+    font-family:'Fredoka One',cursive;
+    font-size:0.9rem; margin-bottom:8px;
+    color:var(--lavender); text-align:center;
+    letter-spacing:0.5px;
+  }
+  .blocked-card {
+    background: rgba(177,151,252,0.08);
+    border:2px solid var(--lavender);
+    border-radius:12px; padding:10px 12px;
+    margin-bottom:8px;
+    font-size:0.78rem;
+    animation: slideIn 0.3s ease-out;
+  }
+  .blocked-card .blocked-label {
+    font-weight:800; color:var(--lavender);
+    display:flex; align-items:center; gap:4px;
+    margin-bottom:2px;
+  }
+  .blocked-card .blocked-time {
+    color:rgba(0,0,0,0.5); font-weight:700;
+  }
+  .blocked-card .btn-unblock {
+    margin-top:6px; width:100%; padding:5px;
+    border:2px solid var(--ink); border-radius:8px;
+    background:white; font-weight:800; font-size:0.75rem;
+    cursor:pointer; color:var(--coral);
+    font-family:'Nunito',sans-serif;
+    transition:all 0.2s;
+  }
+  .blocked-card .btn-unblock:hover {
+    background:rgba(255,107,107,0.1);
+  }
+
+  /* ===== Block Form ===== */
+  .block-form {
+    background:white;
+    border:2.5px solid var(--lavender);
+    border-radius:18px; padding:16px;
+    width:100%; max-width:600px;
+    margin-bottom:20px;
+    box-shadow:4px 4px 0px rgba(0,0,0,0.08);
+    animation: slideIn 0.4s ease-out;
+  }
+  .block-form h3 {
+    font-family:'Fredoka One',cursive;
+    font-size:1rem; color:var(--lavender);
+    margin-bottom:10px; text-align:center;
+  }
+  .block-form .bf-row {
+    display:flex; gap:10px; margin-bottom:10px;
+  }
+  .block-form .bf-field {
+    flex:1;
+  }
+  .block-form .bf-field label {
+    display:block; font-size:0.7rem; font-weight:800;
+    color:rgba(0,0,0,0.4); margin-bottom:4px;
+    text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .block-form .bf-field input {
+    width:100%; padding:10px 12px;
+    border:2px solid var(--ink); border-radius:10px;
+    font-size:0.9rem; font-family:'Nunito',sans-serif;
+    color:var(--ink); background:white; outline:none;
+  }
+  .block-form .bf-field input:focus {
+    border-color:var(--lavender);
+    box-shadow:0 0 0 3px rgba(177,151,252,0.15);
+  }
+  .block-form .btn-block {
+    width:100%; padding:10px;
+    border:2.5px solid var(--ink); border-radius:12px;
+    background:var(--lavender); color:white;
+    font-weight:800; font-size:0.9rem;
+    font-family:'Nunito',sans-serif; cursor:pointer;
+    box-shadow:3px 3px 0px rgba(0,0,0,0.1);
+    transition:all 0.2s;
+  }
+  .block-form .btn-block:hover {
+    transform:translate(-1px,-2px);
+    box-shadow:4px 5px 0px rgba(0,0,0,0.14);
+  }
+
+  /* Admin calendar: blocked cell */
+  .admin-cell.has-blocked {
+    background:rgba(177,151,252,0.12);
+    border-color:rgba(177,151,252,0.4);
+  }
+  .admin-cell .day-blocked {
+    font-size:0.55rem; color:var(--lavender);
+    font-weight:700; margin-top:1px;
+    overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; max-width:100%;
+  }
+
+  /* ===== Main ===== */
+  .main {
+    flex:1; padding:30px;
+    display:flex; flex-direction:column;
+    align-items:center;
+    overflow-y:auto;
+  }
+
+  .dash-header {
+    text-align:center; margin-bottom:24px;
+  }
+  .dash-header h1 {
+    font-family:'Fredoka One',cursive;
+    font-size:1.8rem; color:var(--ink);
+  }
+  .dash-header .wave {
+    font-size:44px; display:block;
+    animation:bobble 2s ease-in-out infinite;
+  }
+
+  /* ===== Stats ===== */
+  .stats {
+    display:flex; gap:12px; margin-bottom:24px;
+    width:100%; max-width:600px;
+  }
+
+  .stat-card {
+    flex:1; background:white;
+    border:2.5px solid var(--ink);
+    border-radius:18px; padding:16px;
+    text-align:center;
+    box-shadow:4px 4px 0px rgba(0,0,0,0.08);
+  }
+  .stat-card .num {
+    font-family:'Fredoka One',cursive;
+    font-size:2.2rem; color:var(--ink);
+    line-height:1;
+  }
+  .stat-card .label {
+    font-size:0.7rem; font-weight:800;
+    color:rgba(0,0,0,0.35);
+    text-transform:uppercase; letter-spacing:1px;
+    margin-top:4px;
+  }
+
+  .stat-card.card-coral .num { color:var(--coral); }
+  .stat-card.card-mint .num { color:var(--mint); }
+  .stat-card.card-sky .num { color:var(--sky); }
+
+  /* ===== Calendar ===== */
+  .admin-cal {
+    background:white;
+    border:3px solid var(--ink);
+    border-radius:24px; padding:24px;
+    width:100%; max-width:600px;
+    box-shadow:6px 6px 0px rgba(0,0,0,0.08);
+  }
+
+  .admin-cal-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px;
+  }
+
+  .cal-nav {
+    width:40px; height:40px; border-radius:50%;
+    border:2.5px solid var(--ink); background:white;
+    font-size:1rem; font-weight:800; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.2s; color:var(--ink);
+  }
+  .cal-nav:hover { background:var(--sun); }
+
+  .cal-month-label {
+    font-family:'Fredoka One',cursive;
+    font-size:1.3rem; color:var(--ink);
+  }
+
+  .admin-grid {
+    display:grid; grid-template-columns:repeat(7,1fr);
+    gap:5px;
+  }
+
+  .admin-day-hdr {
+    text-align:center; font-size:0.7rem; font-weight:800;
+    color:rgba(0,0,0,0.3); padding:6px 0;
+    text-transform:uppercase;
+  }
+
+  .admin-cell {
+    aspect-ratio:1;
+    border-radius:10px; padding:4px;
+    font-size:0.75rem; font-weight:700;
+    border:2px solid transparent;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center;
+    background:rgba(0,0,0,0.02);
+    color:var(--ink);
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+
+  .admin-cell:hover {
+    border-color:var(--ink);
+    transform:scale(1.06);
+  }
+
+  .admin-cell .day-num {
+    font-size:0.85rem; font-weight:800;
+    line-height:1;
+  }
+
+  .admin-cell .day-slots {
+    font-size:0.58rem; color:var(--mint);
+    margin-top:2px; font-weight:700;
+    overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; max-width:100%;
+    line-height:1.2;
+  }
+
+  .admin-cell.has-bookings {
+    background:rgba(81,207,102,0.12);
+    border-color:rgba(81,207,102,0.3);
+  }
+
+  .admin-cell.today {
+    border:2.5px solid var(--sun);
+    background:rgba(255,225,86,0.15);
+  }
+
+  .admin-cell.empty {
+    background:transparent; cursor:default;
+  }
+  .admin-cell.empty:hover {
+    border-color:transparent; transform:none;
+  }
+
+  /* ===== Detail Modal ===== */
+  .detail-card {
+    background:white; border:3px solid var(--ink);
+    border-radius:22px; padding:28px 24px;
+    width:90%; max-width:420px;
+    box-shadow:8px 8px 0px rgba(0,0,0,0.15);
+    animation:popIn 0.4s ease-out;
+    max-height:80vh; overflow-y:auto;
+  }
+
+  .detail-card h3 {
+    font-family:'Fredoka One',cursive;
+    font-size:1.2rem; margin-bottom:14px;
+    color:var(--ink);
+  }
+
+  .detail-item {
+    display:flex; justify-content:space-between;
+    padding:8px 0; border-bottom:1.5px dashed rgba(0,0,0,0.1);
+    font-size:0.9rem;
+  }
+  .detail-item .key {
+    font-weight:700; color:rgba(0,0,0,0.5);
+  }
+  .detail-item .val {
+    font-weight:800; color:var(--ink);
+  }
+
+  .detail-card .btn-close {
+    display:block; width:100%; margin-top:14px;
+    padding:10px; border:2.5px solid var(--ink);
+    border-radius:12px; background:white;
+    font-weight:800; font-family:'Nunito',sans-serif;
+    cursor:pointer; box-shadow:3px 3px 0px rgba(0,0,0,0.08);
+    transition:all 0.2s;
+  }
+  .detail-card .btn-close:hover {
+    background:var(--sun);
+    box-shadow:4px 4px 0px rgba(0,0,0,0.12);
+  }
+
+  @media (max-width:768px) {
+    .layout { flex-direction:column; }
+    .sidebar { width:100%; min-width:unset; height:auto; max-height:45vh;
+      position:relative; border-right:none; border-bottom:3px solid var(--ink); }
+    .main { padding:20px 12px; }
+    .admin-cal { padding:16px; }
+    .stats { flex-wrap:wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-title">📋 invitation box</div>
+    <div class="invitation-box" id="invitationBox">
+      <div class="empty-state" id="emptyInbox">
+        <span class="icon">📭</span>
+        no pending invitations
+      </div>
+    </div>
+    <div class="blocked-section" id="blockedSection">
+      <h3>🤿 wu's busy dives</h3>
+      <div id="blockedList">
+        <div class="empty-state" style="padding:20px 10px; font-size:0.8rem;">
+          <span class="icon" style="font-size:28px;">🏊</span>
+          no blocked times
+        </div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="window.location.href='/'">🚪 back to pond</button>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="dash-header">
+      <span class="wave">🌊</span>
+      <h1>wu's pond dashboard</h1>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card card-coral">
+        <div class="num" id="statTotal">0</div>
+        <div class="label">total fish</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statPending">0</div>
+        <div class="label">pending</div>
+      </div>
+      <div class="stat-card card-mint">
+        <div class="num" id="statConfirmed">0</div>
+        <div class="label">confirmed</div>
+      </div>
+    </div>
+
+    <!-- Block Time Form -->
+    <div class="block-form">
+      <h3>🤿 block time — wu is busy diving</h3>
+      <div class="bf-row">
+        <div class="bf-field">
+          <label>📅 date</label>
+          <input type="date" id="blockDate">
+        </div>
+      </div>
+      <div class="bf-row">
+        <div class="bf-field">
+          <label>⏰ start</label>
+          <input type="time" id="blockStart">
+        </div>
+        <div class="bf-field">
+          <label>⏱️ end</label>
+          <input type="time" id="blockEnd">
+        </div>
+      </div>
+      <button class="btn-block" onclick="blockTime()">🤿 block this time</button>
+    </div>
+
+    <div class="admin-cal">
+      <div class="admin-cal-header">
+        <button class="cal-nav" onclick="changeMonth(-1)">◀</button>
+        <span class="cal-month-label" id="calMonth"></span>
+        <button class="cal-nav" onclick="changeMonth(1)">▶</button>
+      </div>
+      <div class="admin-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Detail overlay -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-card" id="detailCard"></div>
+</div>
+
+<script>
+const PASSWORD = 'msuiting2026';
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+let allBookings = [];
+let allBlocked = [];
+let calMonth = new Date().getMonth();
+let calYear = new Date().getFullYear();
+
+// --- Init ---
+(async function(){
+  await refresh();
+  setInterval(refresh, 10000);
+})();
+
+async function refresh() {
+  try {
+    const r = await fetch('/api/admin/bookings', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password:PASSWORD })
+    });
+    if (!r.ok) { window.location.href='/'; return; }
+    const data = await r.json();
+    allBookings = data.bookings || [];
+    allBlocked = data.blockedSlots || [];
+    updateStats();
+    renderInvites();
+    renderBlockedList();
+    renderCalendar();
+  } catch(e) { console.error(e); }
+}
+
+function updateStats() {
+  const uniqueFish = new Set(allBookings.map(b=>b.fishNumber));
+  document.getElementById('statTotal').textContent = uniqueFish.size;
+  document.getElementById('statPending').textContent =
+    allBookings.filter(b=>b.status==='pending').length;
+  document.getElementById('statConfirmed').textContent =
+    allBookings.filter(b=>b.status==='confirmed').length;
+}
+
+function renderInvites() {
+  const box = document.getElementById('invitationBox');
+  const pending = allBookings.filter(b=>b.status==='pending');
+
+  if (pending.length===0) {
+    box.innerHTML = `<div class="empty-state"><span class="icon">📭</span>no pending invitations</div>`;
+    return;
+  }
+
+  box.innerHTML = '<h3>📨 '+pending.length+' pending</h3>' +
+    pending.map(b=>`
+      <div class="invite-card">
+        <span class="fish-badge">${b.fishEmoji||'🐟'} Fish #${b.fishNumber}</span>
+        <div class="name">${esc(b.name)}</div>
+        <div class="meta">
+          <strong>🎯</strong> ${esc(b.event)}<br>
+          <strong>📅</strong> ${b.date}<br>
+          <strong>⏰</strong> ${b.startTime} — ${b.endTime}
+        </div>
+        <div class="invite-actions">
+          <button class="btn btn-accept" onclick="confirm('${b.id}')">✅ confirm</button>
+          <button class="btn btn-reject" onclick="reject('${b.id}')">❌ decline</button>
+        </div>
+      </div>
+    `).join('');
+}
+
+// --- Calendar ---
+function changeMonth(d) {
+  calMonth+=d;
+  if (calMonth<0){calMonth=11;calYear--;}
+  if (calMonth>11){calMonth=0;calYear++;}
+  renderCalendar();
+}
+
+function renderCalendar() {
+  document.getElementById('calMonth').textContent = MONTHS[calMonth]+' '+calYear;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  DAYS.forEach(d=>{
+    const h=document.createElement('div');h.className='admin-day-hdr';
+    h.textContent=d;grid.appendChild(h);
+  });
+
+  const firstDay = new Date(calYear,calMonth,1).getDay();
+  const days = new Date(calYear,calMonth+1,0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  for(let i=0;i<firstDay;i++){
+    const e=document.createElement('div');e.className='admin-cell empty';grid.appendChild(e);
+  }
+
+  for(let day=1;day<=days;day++){
+    const cell=document.createElement('div');cell.className='admin-cell';
+    const date=new Date(calYear,calMonth,day);date.setHours(0,0,0,0);
+    const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+
+    const bookings = allBookings.filter(b=>b.date===dateStr && b.status==='confirmed');
+    const blocks = allBlocked.filter(b=>b.date===dateStr);
+
+    const num=document.createElement('span');num.className='day-num';
+    num.textContent=day; cell.appendChild(num);
+
+    if (date.getTime()===today.getTime()) cell.classList.add('today');
+    if (bookings.length>0){
+      cell.classList.add('has-bookings');
+      const slots=document.createElement('span');slots.className='day-slots';
+      slots.textContent=bookings.map(b=>`${b.fishEmoji||'🐟'}#${b.fishNumber} ${b.startTime}`).join(', ');
+      cell.appendChild(slots);
+    }
+    if (blocks.length>0){
+      cell.classList.add('has-blocked');
+      const bs=document.createElement('span');bs.className='day-blocked';
+      bs.textContent=blocks.map(b=>'🤿 '+b.startTime).join(', ');
+      cell.appendChild(bs);
+    }
+
+    cell.addEventListener('click',()=>showDayDetail(dateStr));
+    grid.appendChild(cell);
+  }
+}
+
+function showDayDetail(dateStr) {
+  const bookings = allBookings.filter(b=>b.date===dateStr);
+  const blocks = allBlocked.filter(b=>b.date===dateStr);
+  if (bookings.length===0 && blocks.length===0) return;
+
+  const overlay=document.getElementById('detailOverlay');
+  const card=document.getElementById('detailCard');
+
+  let html = `<h3>📅 ${dateStr}</h3>`;
+
+  // Bookings
+  bookings.forEach(b=>{
+    html += `
+      <div class="detail-item"><span class="key">${b.fishEmoji||'🐟'} Fish #</span><span class="val">${b.fishNumber}</span></div>
+      <div class="detail-item"><span class="key">👤 Name</span><span class="val">${esc(b.name)}</span></div>
+      <div class="detail-item"><span class="key">🎯 Event</span><span class="val">${esc(b.event)}</span></div>
+      <div class="detail-item"><span class="key">⏰ Time</span><span class="val">${b.startTime} — ${b.endTime}</span></div>
+      <div class="detail-item"><span class="key">📌 Status</span>
+        <span class="val" style="color:${b.status==='confirmed'?'var(--mint)':b.status==='pending'?'var(--peach)':'var(--coral)'};">
+          ${b.status.toUpperCase()}
+        </span>
+      </div>
+      <hr style="border:none;border-top:1.5px dashed rgba(0,0,0,0.1);margin:8px 0;">
+    `;
+  });
+
+  // Blocked slots
+  blocks.forEach(b=>{
+    html += `
+      <div class="detail-item"><span class="key">🤿 Busy</span><span class="val" style="color:var(--lavender);">${esc(b.label||'wu is busy diving')}</span></div>
+      <div class="detail-item"><span class="key">⏰ Time</span><span class="val">${b.startTime} — ${b.endTime}</span></div>
+      <button class="btn btn-reject" style="margin-top:6px;width:100%;" onclick="unblock('${b.id}')">🔓 unblock</button>
+      <hr style="border:none;border-top:1.5px dashed rgba(0,0,0,0.1);margin:8px 0;">
+    `;
+  });
+
+  html += `<button class="btn-close" onclick="document.getElementById('detailOverlay').classList.remove('show')">✕ close</button>`;
+
+  card.innerHTML = html;
+  overlay.classList.add('show');
+}
+
+document.getElementById('detailOverlay').addEventListener('click',function(e){
+  if(e.target===this) this.classList.remove('show');
+});
+
+// --- Actions ---
+async function confirm(id) {
+  try {
+    const r=await fetch('/api/admin/confirm',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:PASSWORD,bookingId:id})
+    });
+    const d=await r.json();
+    if(!r.ok){alert(d.error);return;}
+    await refresh();
+  }catch(e){alert('error confirming!');}
+}
+
+async function reject(id) {
+  if(!confirm('decline this invitation?'))return;
+  try {
+    await fetch('/api/admin/reject',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:PASSWORD,bookingId:id})
+    });
+    await refresh();
+  }catch(e){alert('error!');}
+}
+
+// --- Block / Unblock ---
+async function blockTime() {
+  const date = document.getElementById('blockDate').value;
+  const start = document.getElementById('blockStart').value;
+  const end = document.getElementById('blockEnd').value;
+  if (!date) return alert('pick a date! 📅');
+  if (!start) return alert('pick a start time! ⏰');
+  if (!end) return alert('pick an end time! ⏱️');
+  if (start >= end) return alert('end must be after start! 🤔');
+
+  try {
+    const r = await fetch('/api/admin/block', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password:PASSWORD, date, startTime:start, endTime:end })
+    });
+    const d = await r.json();
+    if (!r.ok) { alert(d.error); return; }
+    document.getElementById('blockDate').value = '';
+    document.getElementById('blockStart').value = '';
+    document.getElementById('blockEnd').value = '';
+    await refresh();
+  } catch(e) { alert('error blocking time!'); }
+}
+
+async function unblock(id) {
+  try {
+    await fetch('/api/admin/unblock', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password:PASSWORD, blockId:id })
+    });
+    document.getElementById('detailOverlay').classList.remove('show');
+    await refresh();
+  } catch(e) { alert('error unblocking!'); }
+}
+
+function renderBlockedList() {
+  const list = document.getElementById('blockedList');
+  if (allBlocked.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:20px 10px; font-size:0.8rem;"><span class="icon" style="font-size:28px;">🏊</span>no blocked times</div>`;
+    return;
+  }
+  list.innerHTML = allBlocked.map(b => `
+    <div class="blocked-card">
+      <div class="blocked-label">🤿 ${esc(b.label||'wu is busy diving')}</div>
+      <div class="blocked-time">📅 ${b.date} · ${b.startTime}—${b.endTime}</div>
+      <button class="btn-unblock" onclick="unblock('${b.id}')">🔓 unblock</button>
+    </div>
+  `).join('');
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+</script>
+
+</body>
+</html>

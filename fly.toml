@@ -1,0 +1,25 @@
+app = "msuiting-ocean"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+[[mounts]]
+  source = "data"
+  destination = "/data"
+  initial_size = "1gb"
